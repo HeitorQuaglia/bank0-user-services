@@ -28,6 +28,38 @@ func NewUserRepository(db *sql.DB) *UserRepositoryImpl {
 }
 
 func (r *UserRepositoryImpl) Create(user *models.User) error {
+	query := `INSERT INTO users (
+					username,
+					password_hash,
+					password_salt,
+					deleted,
+					deleted_at,
+					created_at,
+					updated_at
+			) VALUES (
+				$1,
+				$2,
+				$3,
+				$4,
+				$5,
+				$6,
+				$7
+			)`
+
+	_, err := r.db.Exec(query,
+		user.Username,
+		user.PasswordHash,
+		user.PasswordSalt,
+		false,
+		nil,
+		time.Time{},
+		time.Time{},
+	)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
