@@ -74,3 +74,12 @@ type UserPasswordChangeLog struct {
 	PasswordSalt string
 	CreatedAt    time.Time
 }
+
+type Filter struct {
+	Offset  *int
+	Limit   *int
+	Search  *string
+	From    *time.Time
+	To      *time.Time
+	Deleted *bool
+}

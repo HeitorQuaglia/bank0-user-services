@@ -16,7 +16,7 @@ type UserRepository interface {
 	Update(*models.User) error
 	Delete(*models.User) error
 	Find(int) (*models.User, error)
-	List() ([]*models.User, error)
+	List(filter *models.Filter) ([]*models.User, error)
 }
 
 type UserRepositoryImpl struct {
@@ -120,6 +120,63 @@ func (r *UserRepositoryImpl) Find(id int) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepositoryImpl) List() ([]*models.User, error) {
-	return nil, nil
+func (r *UserRepositoryImpl) List(filter *models.Filter) ([]*models.User, error) {
+
+	var where []string
+
+	if filter != nil {
+		if filter.Search != nil {
+			where = append(where, fmt.Sprintf("username LIKE '%%%s%%'", *filter.Search))
+		}
+
+		if filter.From != nil {
+			where = append(where, fmt.Sprintf("createdAt >= '%s'", *filter.From))
+		}
+
+		if filter.To != nil {
+			where = append(where, fmt.Sprintf("createdAt <= '%s'", *filter.To))
+		}
+
+		if filter.Deleted != nil {
+			where = append(where, fmt.Sprintf("deleted = %t", *filter.Deleted))
+		}
+	}
+
+	query := `SELECT * FROM users`
+
+	if len(where) > 0 {
+		query += " WHERE " + where[0]
+		for i := 1; i < len(where); i++ {
+			query += " AND " + where[i]
+		}
+	}
+
+	rows, err := r.db.Query(query)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to list users: %v", err)
+	}
+
+	defer rows.Close()
+
+	var users []*models.User
+
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(
+			&user.ID,
+			&user.Username,
+			&user.PasswordHash,
+			&user.PasswordSalt,
+			&user.Deleted,
+			&user.DeletedAt,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("failed to list users: %v", err)
+		}
+		users = append(users, &user)
+	}
+
+	return users, nil
 }
