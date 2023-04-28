@@ -88,6 +88,12 @@ func (r *UserRepositoryImpl) Update(user *models.User) error {
 }
 
 func (r *UserRepositoryImpl) Delete(*models.User) error {
+	query := `UPDATE users SET deleted = $1, deleted_at = $2 WHERE id = $3`
+
+	if _, err := r.db.Exec(query, true, time.Now(), 1); err != nil {
+		return fmt.Errorf("failed to delete user: %v", err)
+	}
+
 	return nil
 }
 
