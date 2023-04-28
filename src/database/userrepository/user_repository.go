@@ -1,7 +1,13 @@
 package userrepository
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"time"
 	"user-services/src/models"
 )
 
@@ -26,6 +32,26 @@ func (r *UserRepositoryImpl) Create(user *models.User) error {
 }
 
 func (r *UserRepositoryImpl) Update(user *models.User) error {
+	if user.PasswordHash == nil {
+		return errors.New("PasswordHash cannot be null")
+	}
+
+	saltBytes := make([]byte, 16)
+	_, err := rand.Read(saltBytes)
+
+	if err != nil {
+		return fmt.Errorf("failed to generate salt: %v", err)
+	}
+
+	var salt = hex.EncodeToString(saltBytes)
+	passwordHash := sha256.Sum256([]byte(*user.PasswordHash + salt))
+
+	query := `UPDATE users SET password_hash = $1, password_salt = $2, updatedAt = $3 WHERE id = $4`
+
+	if _, err = r.db.Exec(query, passwordHash, salt, time.Time{}, user.ID); err != nil {
+		return fmt.Errorf("failed to update user: %v", err)
+	}
+
 	return nil
 }
 
