@@ -98,7 +98,26 @@ func (r *UserRepositoryImpl) Delete(*models.User) error {
 }
 
 func (r *UserRepositoryImpl) Find(id int) (*models.User, error) {
-	return nil, nil
+	query := `SELECT * FROM users WHERE id = $1`
+
+	row := r.db.QueryRow(query, id)
+
+	var user models.User
+
+	if err := row.Scan(
+		&user.ID,
+		&user.Username,
+		&user.PasswordHash,
+		&user.PasswordSalt,
+		&user.Deleted,
+		&user.DeletedAt,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	); err != nil {
+		return nil, fmt.Errorf("failed to find user: %v", err)
+	}
+
+	return &user, nil
 }
 
 func (r *UserRepositoryImpl) List() ([]*models.User, error) {
