@@ -9,6 +9,9 @@ import (
 func NewRouter() http.Handler {
 	r := mux.NewRouter()
 
+	// Middlewares
+	r.Use(LoggingMiddleware)
+
 	// Users routes
 	r.HandleFunc("/users", CreateUserHandler).Methods("POST")
 	r.HandleFunc("/users", GetUsersHandler).Methods("GET")
