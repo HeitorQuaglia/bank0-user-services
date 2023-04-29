@@ -29,7 +29,7 @@ func newDBConnection() *DbConnection {
 
 	host := os.Getenv("DB_HOST")
 	port := os.Getenv("DB_PORT")
-	user := os.Getenv("DB_USER")
+	user := os.Getenv("DB_USERNAME")
 	password := os.Getenv("DB_PASSWORD")
 	database := os.Getenv("DB_DATABASE")
 
